@@ -1,0 +1,16 @@
+# Fcitx5 可选组件 —— 缺失只告警、不让构建失败
+# 由 scripts/in-chroot/35-fcitx5.sh 以 best-effort 方式安装
+#
+# 包名已对 26.04 (resolute) arm64 官方索引核对过（2026-10-30）。注意：
+#   * fcitx5 的 Recommends 是 fcitx5-config-qt + fcitx5-frontend-all + im-config，
+#     而 fcitx5-frontend-all 又 Depends gtk3/gtk4/qt5/qt6 四个前端 —— 也就是说
+#     `apt install fcitx5` 本来就会把它们全带上（GNOME 上也会带 Qt 前端，绕不掉）。
+#     这里仍然显式列出，是为了将来 apt 的 Recommends 策略变化时集合不至于悄悄缩水。
+#   * fcitx5-modules **不需要**列：它是 fcitx5 的硬依赖（软键盘 addon 就在里面）。
+#   * fcitx5-table-extra 是五笔/郑码等码表，只用拼音可以不装。
+fcitx5-config-qt
+fcitx5-frontend-gtk3
+fcitx5-frontend-gtk4
+fcitx5-frontend-qt5
+fcitx5-frontend-qt6
+fcitx5-table-extra

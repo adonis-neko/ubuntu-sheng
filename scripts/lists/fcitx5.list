@@ -1,0 +1,15 @@
+# Fcitx5 中文输入法 —— 必需项：缺任何一个都算功能缺失，安装失败直接让构建失败
+# 由 scripts/in-chroot/35-fcitx5.sh 使用；仅在 rootfs-extend.yml 的 fcitx5 开关打开时生效
+#
+# 包名已对 26.04 (resolute) arm64 官方索引逐个核对过（2026-10-30，fcitx5 5.1.19-1）：
+#   fcitx5                  —— 本体，Depends: fcitx5-data / fcitx5-modules / libfcitx5*
+#                              软键盘 addon 在 fcitx5-modules 里
+#                              （libvirtualkeyboard.so + addon/virtualkeyboard.conf），
+#                              由本包硬依赖带入，**不存在** fcitx5-virtual-keyboard 这个包名
+#   fcitx5-chinese-addons   —— 中文支持元包，Depends: fcitx5-chinese-addons-bin /
+#                              fcitx5-pinyin / fcitx5-table（拼音 addon 名就是 pinyin）
+#   fonts-noto-cjk          —— 在 main 里；没有 CJK 字体时候选框全是豆腐块，
+#                              中文输入等于不可用（本仓库其它 list 都不带字体）
+fcitx5
+fcitx5-chinese-addons
+fonts-noto-cjk
