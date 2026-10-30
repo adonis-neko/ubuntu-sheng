@@ -8,8 +8,8 @@
 #                              由本包硬依赖带入，**不存在** fcitx5-virtual-keyboard 这个包名
 #   fcitx5-chinese-addons   —— 中文支持元包，Depends: fcitx5-chinese-addons-bin /
 #                              fcitx5-pinyin / fcitx5-table（拼音 addon 名就是 pinyin）
-#   fonts-noto-cjk          —— 在 main 里；没有 CJK 字体时候选框全是豆腐块，
-#                              中文输入等于不可用（本仓库其它 list 都不带字体）
+#
+# 字体不在这里：CJK 字体由 36-cjk-fonts.sh 单独负责（cjk-fonts.list，仅 GNOME，
+# 有自己的 cjk_fonts 开关），这样"要不要装输入法"和"要不要装中文字体"互不牵连。
 fcitx5
 fcitx5-chinese-addons
-fonts-noto-cjk

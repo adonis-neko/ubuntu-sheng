@@ -1,0 +1,17 @@
+# 中文字体（CJK）—— 仅 GNOME 分支需要
+# 由 scripts/in-chroot/36-cjk-fonts.sh 使用；仅在 rootfs-extend.yml 的 cjk_fonts 开关打开时生效
+#
+# 为什么 GNOME 要单独补：
+#   lists/gnome.list 刻意不使用 ubuntu-desktop / ubuntu-desktop-minimal（它们硬依赖 snapd），
+#   因此拿不到元包顺带的那批字体。实测 26.04 / 26.10 arm64 的依赖闭包里只有
+#   fonts-adwaita、fonts-dejavu，**没有任何 CJK 字体** —— LANGUAGE=zh_CN 时
+#   GNOME 界面文字会整片显示成方块（豆腐块）。
+#
+# 为什么 KDE / Lomiri 不需要：
+#   KDE 的闭包已经自带 fonts-noto-cjk（plasma 的 Recommends 带入，实测 26.04 闭包含该包），
+#   所以 36-cjk-fonts.sh 在非 GNOME 下直接跳过，开关对它们无效。
+#
+# 包名已对 26.04 (resolute) 与 26.10 (stonking) arm64 官方索引核对过（2026-10-30）：
+#   fonts-noto-cjk  —— 在 main 里，Noto Sans/Serif CJK 全套（SC/TC/JP/KR），
+#                      安装到 /usr/share/fonts/opentype/noto/，体积约 90 MB
+fonts-noto-cjk

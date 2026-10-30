@@ -2,9 +2,10 @@ name: Build RootFS (Ubuntu, extend)
 
 # 为小米平板 6S Pro (sheng, SM8550) 构建 Ubuntu rootfs.img + boot.img
 #
-# ⚠️ 本文件是 rootfs.yml 的**变体副本**，差异只在于多出两个可选功能开关：
+# ⚠️ 本文件是 rootfs.yml 的**变体副本**，差异只在于多出三个可选功能开关：
 #      full_docs  删掉 dpkg 的 excludes（man/文档/翻译正常安装）
-#      fcitx5     安装并预配置 Fcitx5 中文输入法
+#      fcitx5     安装 Fcitx5 中文输入法（只装包，不做任何配置）
+#      cjk_fonts  给 GNOME 补中文字体（KDE 自带，非 GNOME 时该开关无效）
 #    原 rootfs.yml 保持不动，两个工作流可以各自触发、互不影响。
 #    改通用逻辑时请同时改 rootfs.yml，或先把这个变体合并回去，避免两份漂移。
 #
@@ -18,8 +19,11 @@ name: Build RootFS (Ubuntu, extend)
 #   * 可选（full_docs 开关，默认开启）：删掉 /etc/dpkg/dpkg.cfg.d/excludes，
 #     让 man/文档/翻译正常安装（见 scripts/in-chroot/05-full-docs.sh；必须在第一个
 #     apt 安装步骤之前执行）
-#   * 可选（fcitx5 开关，默认开启）：安装 Fcitx5 中文输入法，并配好自启动与环境变量
-#     （见 scripts/in-chroot/35-fcitx5.sh；输入法组/拼音等个性化设置由用户进桌面自己配）
+#   * 可选（fcitx5 开关，默认开启）：安装 Fcitx5 中文输入法，**只装包不做配置**
+#     （见 scripts/in-chroot/35-fcitx5.sh；输入法组/快捷键/自启动由用户进桌面自己配）
+#   * 可选（cjk_fonts 开关，默认开启）：给 GNOME 补中文字体 fonts-noto-cjk
+#     （见 scripts/in-chroot/36-cjk-fonts.sh；KDE 的依赖闭包已自带该字体，
+#      所以只在 desktop=GNOME 时生效，其它桌面环境自动跳过）
 on:
   workflow_dispatch:
     inputs:
@@ -116,7 +120,12 @@ on:
         type: boolean
         default: true
       fcitx5:
-        description: '安装 Fcitx5 中文输入法（含拼音引擎、前端模块、CJK 字体、自启动与环境变量；输入法组由用户进桌面用 fcitx5-configtool 自行配置）'
+        description: '安装 Fcitx5 中文输入法（只装包，不写任何配置；输入法组/快捷键/自启动由用户进桌面用 fcitx5-configtool 自行设置）'
+        required: false
+        type: boolean
+        default: true
+      cjk_fonts:
+        description: '给 GNOME 补中文字体 fonts-noto-cjk（仅 desktop=GNOME 生效；KDE 的依赖闭包已自带该字体，其它桌面环境会跳过）'
         required: false
         type: boolean
         default: true
@@ -421,6 +430,7 @@ jobs:
           KERNEL_SOURCE='${{ inputs.kernel_source }}'
           FULL_DOCS='${{ inputs.full_docs }}'
           FCITX5='${{ inputs.fcitx5 }}'
+          CJK_FONTS='${{ inputs.cjk_fonts }}'
           EOF
           sudo chmod 600 "$ROOTFS_MOUNT/root/build.env"
           echo "build.env 内容："
@@ -452,6 +462,11 @@ jobs:
       - name: "[chroot] Install Fcitx5"
         if: inputs.fcitx5
         run: sudo chroot "$ROOTFS_MOUNT" /root/sheng-build/in-chroot/35-fcitx5.sh
+
+      # 只对 GNOME 生效（KDE 的闭包自带 fonts-noto-cjk），脚本内会再判一次 DESKTOP
+      - name: "[chroot] Install CJK Fonts (GNOME)"
+        if: inputs.cjk_fonts
+        run: sudo chroot "$ROOTFS_MOUNT" /root/sheng-build/in-chroot/36-cjk-fonts.sh
 
       - name: Prepare Password File
         run: |
@@ -525,7 +540,8 @@ jobs:
             echo "| quiet boot | ${{ steps.parse.outputs.quiet_boot_enabled }} |"
             echo "| snap | 已禁用（snapd 不安装，nosnap.pref 已写入，构建末尾硬校验） |"
             echo "| man/文档/翻译 | ${{ inputs.full_docs && '完整（已删除 dpkg 的 excludes）' || '已裁剪（保留 dpkg 的 excludes）' }} |"
-            echo "| 输入法 | ${{ inputs.fcitx5 && 'Fcitx5（已配自启动与环境变量，输入法组待桌面内自行配置）' || '未安装' }} |"
+            echo "| 输入法 | ${{ inputs.fcitx5 && 'Fcitx5（仅装包，配置由用户进桌面完成）' || '未安装' }} |"
+            echo "| 中文字体 | ${{ inputs.desktop != 'GNOME' && '由桌面环境自带（KDE/Lomiri 闭包含 fonts-noto-cjk）' || inputs.cjk_fonts && 'fonts-noto-cjk（已安装）' || '未安装（GNOME 中文界面会显示为方块）' }} |"
             echo "| rootfs.img | $(du -h rootfs.img 2>/dev/null | cut -f1 || echo 'N/A') |"
             echo "| boot.img | $(du -h boot.img 2>/dev/null | cut -f1 || echo 'N/A') |"
             echo "| 设备包数量 | $(find debs -maxdepth 1 -name '*.deb' 2>/dev/null | wc -l) |"

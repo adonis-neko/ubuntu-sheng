@@ -14,3 +14,6 @@ stage/
 # 临时文件
 *.log
 *.tmp
+
+# macOS
+.DS_Store
